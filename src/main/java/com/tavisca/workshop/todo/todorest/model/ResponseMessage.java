@@ -5,10 +5,6 @@ public class ResponseMessage<T> {
     private String message;
     private T data;
 
-
-    public ResponseMessage() {
-    }
-
     public ResponseMessage(String status, String message, T data) {
         this.status = status;
         this.message = message;

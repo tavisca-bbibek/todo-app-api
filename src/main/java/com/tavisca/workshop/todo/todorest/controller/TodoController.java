@@ -12,6 +12,7 @@ import javax.validation.Valid;
 import java.util.Optional;
 
 @RestController
+@CrossOrigin
 public class TodoController {
 
     private static final String STATUS_FAILURE = "failure";
@@ -37,7 +38,7 @@ public class TodoController {
     @PostMapping("/todo")
     public ResponseEntity<ResponseMessage> createItem(@Valid @RequestBody TodoItem item) {
         int todoCount = (int) todoService.count();
-        if(todoService.findById(todoCount).get().isSame(item))
+        if(todoCount > 0 && todoService.findById(todoCount).get().isSame(item))
            return new ResponseEntity<>(
                     new ResponseMessage(STATUS_FAILURE, "Repeated request.", null),
                     HttpStatus.CONFLICT);
