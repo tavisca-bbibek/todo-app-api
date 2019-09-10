@@ -9,12 +9,14 @@ import java.util.stream.StreamSupport;
 
 public class HashMapTodoRepository implements TodoRepository {
     private Map<Integer, TodoItem> idToTodoItemMap = new HashMap<>();
+
     {
-        idToTodoItemMap.put(1, new TodoItem(1, "First Item", "Description for the first item"));
-        idToTodoItemMap.put(2, new TodoItem(2, "2nd Item", "Description for the 2nd item"));
+        idToTodoItemMap.put(1, new TodoItem(1, "Dance for no reason", "Because Jindagi jhand baa..."));
+        idToTodoItemMap.put(2, new TodoItem(2, "Kill yourself", "Daemon the Thread"));
     }
 
     @Override
+
     public <S extends TodoItem> S save(S item) {
         idToTodoItemMap.put(item.getId(), item);
         return item;
@@ -73,6 +75,14 @@ public class HashMapTodoRepository implements TodoRepository {
     @Override
     public void deleteAll() {
         idToTodoItemMap.clear();
+    }
+
+    @Override
+    public int generateNewId() {
+        int id = (int) idToTodoItemMap.size();
+        while(idToTodoItemMap.keySet().contains(id))
+            id++;
+        return id;
     }
 
     private <T> List<T> toList(Iterable<T> iterable) {

@@ -19,6 +19,8 @@ public class TodoController {
     private static final String STATUS_SUCCESS = "success";
     private TodoRepository todoService = new HashMapTodoRepository();
 
+    TodoItem recentlySavedItem = null;
+
     @GetMapping(value = {"/todos", "/todo"})
     public ResponseMessage<Iterable<TodoItem>> getAll() {
         return new ResponseMessage<>(STATUS_SUCCESS, "list of all todo items", todoService.findAll());
@@ -37,22 +39,17 @@ public class TodoController {
 
     @PostMapping("/todo")
     public ResponseEntity<ResponseMessage> createItem(@Valid @RequestBody TodoItem item) {
-        int todoCount = (int) todoService.count();
-        if(todoCount > 0 && todoService.findById(todoCount).get().isSame(item))
-           return new ResponseEntity<>(
+
+        if (recentlySavedItem != null && recentlySavedItem.isSame(item))
+            return new ResponseEntity<>(
                     new ResponseMessage(STATUS_FAILURE, "Repeated request.", null),
                     HttpStatus.CONFLICT);
 
-        TodoItem finalItem = new TodoItem(todoCount + 1, item.getTitle(), item.getDescription());
-        Optional<TodoItem> mayBeItem = todoService.findById(item.getId());
-        return mayBeItem.map(
-                todoItem -> new ResponseEntity<>(
-                        new ResponseMessage(STATUS_FAILURE, "Item already exists", null),
-                        HttpStatus.BAD_REQUEST))
-                .orElseGet(() ->
-                        new ResponseEntity<>(
-                                new ResponseMessage<>(STATUS_SUCCESS, "Item created", todoService.save(finalItem)),
-                                HttpStatus.CREATED));
+        TodoItem finalItem = new TodoItem(todoService.generateNewId(), item.getTitle(), item.getDescription());
+        recentlySavedItem = item;
+        return new ResponseEntity<>(
+                new ResponseMessage<>(STATUS_SUCCESS, "Item created", todoService.save(finalItem)),
+                HttpStatus.CREATED);
     }
 
     @PutMapping("/todo/{id}")
@@ -70,12 +67,31 @@ public class TodoController {
                         HttpStatus.BAD_REQUEST));
     }
 
+    @PatchMapping("/todo/{id}")
+    public ResponseEntity patchItem(@PathVariable Integer id,
+                                    @RequestBody TodoItem item) {
+        Optional<TodoItem> maybeItem = todoService.findById(id);
+
+        return maybeItem.map(todoItem -> {
+            TodoItem finalItem = new TodoItem(id,
+                    item.getTitle() == null ? maybeItem.get().getTitle() : item.getTitle(),
+                    item.getDescription() == null ? maybeItem.get().getDescription() : item.getDescription());
+            return new ResponseEntity<>(
+                    new ResponseMessage(STATUS_SUCCESS, "item updated", todoService.save(finalItem)),
+                    HttpStatus.ACCEPTED);
+        }).orElseGet(() -> new ResponseEntity(
+                new ResponseMessage<>(STATUS_FAILURE, "item doesn't exist ", null),
+                HttpStatus.BAD_REQUEST));
+    }
+
     @DeleteMapping("/todo/{id}")
     public ResponseEntity<ResponseMessage> deleteItem(@PathVariable Integer id) {
         Optional<TodoItem> mayBeItem = todoService.findById(id);
 
         return mayBeItem.map(todoItem -> {
             todoService.delete(todoItem);
+            if(todoService.count() == 0)
+                recentlySavedItem = null;
             return new ResponseEntity(
                     new ResponseMessage(STATUS_SUCCESS, "item deleted", null),
                     HttpStatus.OK);
