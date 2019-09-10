@@ -1,6 +1,9 @@
 package com.tavisca.workshop.todo.todorest.controller;
 
+import com.tavisca.workshop.todo.todorest.exception.ItemNotFoundException;
+import com.tavisca.workshop.todo.todorest.exception.RepeatedRequestException;
 import com.tavisca.workshop.todo.todorest.model.ResponseMessage;
+import com.tavisca.workshop.todo.todorest.model.ResponseMessageWithData;
 import com.tavisca.workshop.todo.todorest.model.TodoItem;
 import com.tavisca.workshop.todo.todorest.service.HashMapTodoRepository;
 import com.tavisca.workshop.todo.todorest.service.TodoRepository;
@@ -22,83 +25,76 @@ public class TodoController {
     TodoItem recentlySavedItem = null;
 
     @GetMapping(value = {"/todos", "/todo"})
-    public ResponseMessage<Iterable<TodoItem>> getAll() {
-        return new ResponseMessage<>(STATUS_SUCCESS, "list of all todo items", todoService.findAll());
+    public ResponseMessageWithData<Iterable<TodoItem>> getAll() {
+        return new ResponseMessageWithData<>(STATUS_SUCCESS, "list of all todo items", todoService.findAll());
     }
 
     @GetMapping("/todo/{id}")
-    public ResponseEntity<ResponseMessage> getById(@PathVariable Integer id) {
+    public ResponseMessageWithData getById(@PathVariable Integer id) throws ItemNotFoundException {
         Optional<TodoItem> mayBeItem = todoService.findById(id);
-        return mayBeItem.map(todoItem -> new ResponseEntity<>(
-                new ResponseMessage(STATUS_SUCCESS, "Item retrieved", todoItem),
-                HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(
-                        new ResponseMessage(STATUS_FAILURE, "Item with id " + id + " doesn't exist", null),
-                        HttpStatus.BAD_REQUEST));
+        if (mayBeItem.isPresent())
+            return new ResponseMessageWithData(STATUS_SUCCESS, "Item retrieved", mayBeItem.get());
+        else
+            throw new ItemNotFoundException();
     }
 
     @PostMapping("/todo")
-    public ResponseEntity<ResponseMessage> createItem(@Valid @RequestBody TodoItem item) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseMessageWithData createItem(@Valid @RequestBody TodoItem item) throws RepeatedRequestException {
 
         if (recentlySavedItem != null && recentlySavedItem.isSame(item))
-            return new ResponseEntity<>(
-                    new ResponseMessage(STATUS_FAILURE, "Repeated request.", null),
-                    HttpStatus.CONFLICT);
+            throw new RepeatedRequestException();
 
         TodoItem finalItem = new TodoItem(todoService.generateNewId(), item.getTitle(), item.getDescription());
         recentlySavedItem = item;
-        return new ResponseEntity<>(
-                new ResponseMessage<>(STATUS_SUCCESS, "Item created", todoService.save(finalItem)),
-                HttpStatus.CREATED);
+        return new ResponseMessageWithData<>(STATUS_SUCCESS, "Item created", todoService.save(finalItem));
     }
 
     @PutMapping("/todo/{id}")
-    public ResponseEntity putItem(@PathVariable Integer id,
-                                  @Valid @RequestBody TodoItem item) {
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public ResponseMessageWithData putItem(@PathVariable Integer id,
+                                           @Valid @RequestBody TodoItem item) throws ItemNotFoundException {
 
         Optional<TodoItem> maybeItem = todoService.findById(id);
         TodoItem finalItem = new TodoItem(id, item.getTitle(), item.getDescription());
 
-        return maybeItem.map(todoItem -> new ResponseEntity<>(
-                new ResponseMessage(STATUS_SUCCESS, "item updated", todoService.save(finalItem)),
-                HttpStatus.ACCEPTED))
-                .orElseGet(() -> new ResponseEntity(
-                        new ResponseMessage<>(STATUS_FAILURE, "item doesn't exist ", null),
-                        HttpStatus.BAD_REQUEST));
+        if (maybeItem.isPresent())
+            return new ResponseMessageWithData(STATUS_SUCCESS, "item updated", todoService.save(finalItem));
+        else
+            throw new ItemNotFoundException();
     }
 
     @PatchMapping("/todo/{id}")
-    public ResponseEntity patchItem(@PathVariable Integer id,
-                                    @RequestBody TodoItem item) {
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public ResponseMessageWithData patchItem(@PathVariable Integer id,
+                                             @RequestBody TodoItem item) throws ItemNotFoundException {
         Optional<TodoItem> maybeItem = todoService.findById(id);
 
-        return maybeItem.map(todoItem -> {
+        if (maybeItem.isPresent()) {
             TodoItem finalItem = new TodoItem(id,
                     item.getTitle() == null ? maybeItem.get().getTitle() : item.getTitle(),
                     item.getDescription() == null ? maybeItem.get().getDescription() : item.getDescription());
-            return new ResponseEntity<>(
-                    new ResponseMessage(STATUS_SUCCESS, "item updated", todoService.save(finalItem)),
-                    HttpStatus.ACCEPTED);
-        }).orElseGet(() -> new ResponseEntity(
-                new ResponseMessage<>(STATUS_FAILURE, "item doesn't exist ", null),
-                HttpStatus.BAD_REQUEST));
+            return new ResponseMessageWithData(STATUS_SUCCESS, "item updated", todoService.save(finalItem));
+        } else
+            throw new ItemNotFoundException();
     }
 
     @DeleteMapping("/todo/{id}")
-    public ResponseEntity<ResponseMessage> deleteItem(@PathVariable Integer id) {
+    public ResponseMessage deleteItem(@PathVariable Integer id) throws ItemNotFoundException {
         Optional<TodoItem> mayBeItem = todoService.findById(id);
 
-        return mayBeItem.map(todoItem -> {
-            todoService.delete(todoItem);
-            if(todoService.count() == 0)
+        if (mayBeItem.isPresent()) {
+            todoService.delete(mayBeItem.get());
+            if (todoService.count() == 0)
                 recentlySavedItem = null;
-            return new ResponseEntity(
-                    new ResponseMessage(STATUS_SUCCESS, "item deleted", null),
-                    HttpStatus.OK);
-        })
-                .orElseGet(() ->
-                        new ResponseEntity<>(
-                                new ResponseMessage(STATUS_FAILURE, "item doesn't exist", null),
-                                HttpStatus.BAD_REQUEST));
+            return new ResponseMessage(STATUS_SUCCESS, "item deleted");
+        } else
+            throw new ItemNotFoundException();
+    }
+
+    @ExceptionHandler(ItemNotFoundException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    ResponseMessage handleItemNotFoundException(ItemNotFoundException e) {
+        return new ResponseMessage("failure", e.getMessage());
     }
 }
