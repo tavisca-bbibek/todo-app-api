@@ -1,19 +1,20 @@
 package com.tavisca.workshop.todo.todorest.service;
 
 import com.tavisca.workshop.todo.todorest.model.TodoItem;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@Component("TodoRepository")
 public class HashMapTodoRepository implements TodoRepository {
     private Map<Integer, TodoItem> idToTodoItemMap = new HashMap<>();
 
-    {
+   /* {
         idToTodoItemMap.put(1, new TodoItem(1, "Dance for no reason", "Because Jindagi jhand baa..."));
         idToTodoItemMap.put(2, new TodoItem(2, "Kill yourself", "Daemon the Thread"));
-    }
+    }*/
 
     @Override
 
@@ -79,8 +80,8 @@ public class HashMapTodoRepository implements TodoRepository {
 
     @Override
     public int generateNewId() {
-        int id = (int) idToTodoItemMap.size();
-        while(idToTodoItemMap.keySet().contains(id))
+        int id = idToTodoItemMap.size();
+        while(id == 0 || idToTodoItemMap.keySet().contains(id))
             id++;
         return id;
     }
