@@ -19,6 +19,9 @@ public class HashMapTodoRepository implements TodoRepository {
     @Override
 
     public <S extends TodoItem> S save(S item) {
+        if(item.getId() == TodoItem.ID_NONE)
+            item.setId(generateNewId());
+
         idToTodoItemMap.put(item.getId(), item);
         return item;
     }
@@ -78,8 +81,7 @@ public class HashMapTodoRepository implements TodoRepository {
         idToTodoItemMap.clear();
     }
 
-    @Override
-    public int generateNewId() {
+    private int generateNewId() {
         int id = idToTodoItemMap.size();
         while(id == 0 || idToTodoItemMap.keySet().contains(id))
             id++;

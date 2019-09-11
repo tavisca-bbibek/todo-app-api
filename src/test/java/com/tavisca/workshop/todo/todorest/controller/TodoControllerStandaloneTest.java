@@ -36,7 +36,7 @@ public class TodoControllerStandaloneTest {
     TodoRepository todoRepository;
 
     @Autowired
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
 
     private ObjectMapper mapper = new ObjectMapper();
 
@@ -90,51 +90,51 @@ public class TodoControllerStandaloneTest {
 
     @Test
     public void modifiesItemWhenRequestedPutWithAnItem() throws Exception {
-        TodoItem oldItem = new TodoItem(0, "title", "description");
-        TodoItem newItem = new TodoItem(0, "new-title", "new-description");
+        TodoItem oldItem = new TodoItem(1, "title", "description");
+        TodoItem newItem = new TodoItem(1, "new-title", "new-description");
 
-        Mockito.when(todoRepository.findById(0)).thenReturn(Optional.of(oldItem));
+        Mockito.when(todoRepository.findById(1)).thenReturn(Optional.of(oldItem));
 
         mockMvc.perform(
-                put("/todo/0")
+                put("/todo/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(newItem))
         ).andExpect(status().isAccepted());
 
-        Mockito.when(todoRepository.findById(0)).thenReturn(Optional.of(newItem));
-        mockMvc.perform(get("/todo/0"))
+        Mockito.when(todoRepository.findById(1)).thenReturn(Optional.of(newItem));
+        mockMvc.perform(get("/todo/1"))
                 .andExpect(jsonPath("$.data.title", Matchers.is("new-title")))
                 .andExpect(jsonPath("$.data.description", Matchers.is("new-description")));
     }
 
     @Test
     public void updatesGivenItemFieldsOnPatchWithAPartialItem() throws Exception {
-        TodoItem oldItem = new TodoItem(0, "title", "description");
-        TodoItem newItem = new TodoItem(0, "new-title", "description");
+        TodoItem oldItem = new TodoItem(1, "title", "description");
+        TodoItem newItem = new TodoItem(1, "new-title", "description");
 
-        Mockito.when(todoRepository.findById(0)).thenReturn(Optional.of(oldItem));
+        Mockito.when(todoRepository.findById(1)).thenReturn(Optional.of(oldItem));
 
         mockMvc.perform(
-                patch("/todo/0")
+                patch("/todo/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(newItem))
         ).andExpect(status().isAccepted());
 
-        Mockito.when(todoRepository.findById(0)).thenReturn(Optional.of(newItem));
-        mockMvc.perform(get("/todo/0"))
+        Mockito.when(todoRepository.findById(1)).thenReturn(Optional.of(newItem));
+        mockMvc.perform(get("/todo/1"))
                 .andExpect(jsonPath("$.data.title", Matchers.is("new-title")))
                 .andExpect(jsonPath("$.data.description", Matchers.is("description")));
     }
 
     @Test
     public void deletesItemWhenRequestedDeleteWith_Id_Parameter() throws Exception {
-        TodoItem item = new TodoItem(0, "title", "description");
+        TodoItem item = new TodoItem(1, "title", "description");
         List<TodoItem> items = Arrays.asList(item);
 
-        Mockito.when(todoRepository.findById(0)).thenReturn(Optional.of(item));
+        Mockito.when(todoRepository.findById(1)).thenReturn(Optional.of(item));
         Mockito.when(todoRepository.findAll()).thenReturn(Collections.EMPTY_LIST);
 
-        mockMvc.perform(delete("/todo/0")
+        mockMvc.perform(delete("/todo/1")
                 .content(mapper.writeValueAsString(item))
                 .contentType(MediaType.APPLICATION_JSON)
         )

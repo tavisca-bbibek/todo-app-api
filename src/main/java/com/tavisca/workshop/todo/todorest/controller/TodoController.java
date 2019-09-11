@@ -5,7 +5,6 @@ import com.tavisca.workshop.todo.todorest.exception.RepeatedRequestException;
 import com.tavisca.workshop.todo.todorest.model.ResponseMessage;
 import com.tavisca.workshop.todo.todorest.model.ResponseMessageWithData;
 import com.tavisca.workshop.todo.todorest.model.TodoItem;
-import com.tavisca.workshop.todo.todorest.service.HashMapTodoRepository;
 import com.tavisca.workshop.todo.todorest.service.TodoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -45,9 +44,8 @@ public class TodoController {
         if (recentlySavedItem != null && recentlySavedItem.isSame(item))
             throw new RepeatedRequestException();
 
-        TodoItem finalItem = new TodoItem(todoService.generateNewId(), item.getTitle(), item.getDescription());
         recentlySavedItem = item;
-        return new ResponseMessageWithData<>(STATUS_SUCCESS, "item added", todoService.save(finalItem));
+        return new ResponseMessageWithData<>(STATUS_SUCCESS, "item added", todoService.save(item));
     }
 
     @PutMapping("/todo/{id}")

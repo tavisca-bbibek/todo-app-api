@@ -5,7 +5,7 @@ import java.util.Objects;
 
 public class TodoItem {
     private int id;
-
+    public static final int ID_NONE = 0;
     @NotBlank
     private String title;
 
@@ -44,5 +44,9 @@ public class TodoItem {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

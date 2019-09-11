@@ -27,6 +27,4 @@ public interface TodoRepository{
     void deleteAll(Iterable<? extends TodoItem> entities);
 
     void deleteAll();
-
-    int generateNewId();
 }
