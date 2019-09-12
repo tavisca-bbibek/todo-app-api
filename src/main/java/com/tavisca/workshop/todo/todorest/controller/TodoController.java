@@ -20,18 +20,18 @@ public class TodoController {
     private static final String STATUS_SUCCESS = "success";
 
     @Autowired
-    private TodoRepository todoService;
+    private TodoRepository todoRepository;
 
-    TodoItem recentlySavedItem = null;
+    private TodoItem recentlySavedItem = null;
 
     @GetMapping(value = {"/todos", "/todo"})
     public ResponseMessageWithData<Iterable<TodoItem>> getAll() {
-        return new ResponseMessageWithData<>(STATUS_SUCCESS, "list of all todo items", todoService.findAll());
+        return new ResponseMessageWithData<>(STATUS_SUCCESS, "list of all todo items", todoRepository.findAll());
     }
 
     @GetMapping("/todo/{id}")
     public ResponseMessageWithData<TodoItem> getById(@PathVariable Integer id) throws ItemNotFoundException {
-        Optional<TodoItem> mayBeItem = todoService.findById(id);
+        Optional<TodoItem> mayBeItem = todoRepository.findById(id);
         if (mayBeItem.isPresent())
             return new ResponseMessageWithData<>(STATUS_SUCCESS, "Item retrieved", mayBeItem.get());
         else
@@ -45,7 +45,7 @@ public class TodoController {
             throw new RepeatedRequestException();
 
         recentlySavedItem = item;
-        return new ResponseMessageWithData<>(STATUS_SUCCESS, "item added", todoService.save(item));
+        return new ResponseMessageWithData<>(STATUS_SUCCESS, "item added", todoRepository.save(item));
     }
 
     @PutMapping("/todo/{id}")
@@ -53,11 +53,11 @@ public class TodoController {
     public ResponseMessageWithData<TodoItem> putItem(@PathVariable Integer id,
                                                      @Valid @RequestBody TodoItem item) throws ItemNotFoundException {
 
-        Optional<TodoItem> maybeItem = todoService.findById(id);
+        Optional<TodoItem> maybeItem = todoRepository.findById(id);
         TodoItem finalItem = new TodoItem(id, item.getTitle(), item.getDescription());
 
         if (maybeItem.isPresent())
-            return new ResponseMessageWithData<>(STATUS_SUCCESS, "item updated", todoService.save(finalItem));
+            return new ResponseMessageWithData<>(STATUS_SUCCESS, "item updated", todoRepository.save(finalItem));
         else
             throw new ItemNotFoundException();
     }
@@ -66,24 +66,24 @@ public class TodoController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public ResponseMessageWithData<TodoItem> patchItem(@PathVariable Integer id,
                                                        @RequestBody TodoItem item) throws ItemNotFoundException {
-        Optional<TodoItem> maybeItem = todoService.findById(id);
+        Optional<TodoItem> maybeItem = todoRepository.findById(id);
 
         if (maybeItem.isPresent()) {
             TodoItem finalItem = new TodoItem(id,
                     item.getTitle() == null ? maybeItem.get().getTitle() : item.getTitle(),
                     item.getDescription() == null ? maybeItem.get().getDescription() : item.getDescription());
-            return new ResponseMessageWithData<>(STATUS_SUCCESS, "item updated", todoService.save(finalItem));
+            return new ResponseMessageWithData<>(STATUS_SUCCESS, "item updated", todoRepository.save(finalItem));
         } else
             throw new ItemNotFoundException();
     }
 
     @DeleteMapping("/todo/{id}")
     public ResponseMessage deleteItem(@PathVariable Integer id) throws ItemNotFoundException {
-        Optional<TodoItem> mayBeItem = todoService.findById(id);
+        Optional<TodoItem> mayBeItem = todoRepository.findById(id);
 
         if (mayBeItem.isPresent()) {
-            todoService.delete(mayBeItem.get());
-            if (todoService.count() == 0)
+            todoRepository.delete(mayBeItem.get());
+            if (todoRepository.count() == 0)
                 recentlySavedItem = null;
             return new ResponseMessage(STATUS_SUCCESS, "item deleted");
         } else

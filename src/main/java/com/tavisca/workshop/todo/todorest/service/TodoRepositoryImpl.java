@@ -7,17 +7,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-@Component("TodoRepository")
-public class HashMapTodoRepository implements TodoRepository {
+//@Component("TodoRepository")
+public class TodoRepositoryImpl implements TodoRepository {
     private Map<Integer, TodoItem> idToTodoItemMap = new HashMap<>();
 
-   /* {
-        idToTodoItemMap.put(1, new TodoItem(1, "Dance for no reason", "Because Jindagi jhand baa..."));
-        idToTodoItemMap.put(2, new TodoItem(2, "Kill yourself", "Daemon the Thread"));
-    }*/
-
     @Override
-
     public <S extends TodoItem> S save(S item) {
         if(item.getId() == TodoItem.ID_NONE)
             item.setId(generateNewId());
