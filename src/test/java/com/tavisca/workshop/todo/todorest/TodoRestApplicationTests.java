@@ -17,31 +17,4 @@ public class TodoRestApplicationTests {
 	@Test
 	public void contextLoads() {
 	}
-
-	/*
-	//Test using RestTemplate
-	@Test
-	public void canCreateReadAndDeleteTodoItem(){
-		RestTemplate restTemplate = new RestTemplate();
-		String url = "http://localhost:8080/todo";
-
-		TodoItem item = new TodoItem(1, "test", "test description");
-		ResponseMessageWithData<TodoItem> response = restTemplate.postForObject(url, item, ResponseMessageWithData.class);
-		ResponseMessageWithData<TodoItem> expected = new ResponseMessageWithData<>("success", "item added", item);
-		Assertions.assertThat(response).isSameAs(expected);
-	}*/
-
-	@Test
-	public void canCreateReadAndDeleteTodoItem(){
-		RestTemplate restTemplate = new RestTemplate();
-		String url = "http://localhost:8080/todo";
-
-		TodoItem item = new TodoItem(1, "test", "test description");
-		ResponseMessageWithData<TodoItem> response = restTemplate.postForObject(url, item, ResponseMessageWithData.class);
-		ResponseMessageWithData<TodoItem> expected = new ResponseMessageWithData<>("success", "item added", item);
-		Assertions.assertThat(response).isSameAs(expected);
-	}
-
-	
-
 }
